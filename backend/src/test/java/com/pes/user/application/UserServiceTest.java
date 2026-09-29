@@ -3,6 +3,9 @@ package com.pes.user.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +14,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +34,16 @@ class UserServiceTest {
 
 	@Mock
 	private PasswordEncoder passwordEncoder;
+
+	@Test
+	void usesEmptyStringWhenSearchTermIsMissing() {
+		when(repository.search(anyString(), isNull(), any(Pageable.class))).thenReturn(Page.empty());
+		UserService service = new UserService(repository, passwordEncoder);
+
+		service.search(null, null, 0, 20);
+
+		verify(repository).search(eq(""), isNull(), any(Pageable.class));
+	}
 
 	@Test
 	void hashesPasswordWhenCreatingUser() {

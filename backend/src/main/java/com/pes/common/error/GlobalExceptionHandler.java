@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import com.pes.common.api.ApiErrorResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 	@ExceptionHandler(NotFoundException.class)
 	ResponseEntity<ApiErrorResponse> handleNotFound(NotFoundException exception) {
@@ -49,6 +52,12 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
 	ResponseEntity<ApiErrorResponse> handleOptimisticLock(ObjectOptimisticLockingFailureException exception) {
 		return error(HttpStatus.CONFLICT, "CONCURRENT_MODIFICATION", "다른 사용자가 먼저 변경했습니다. 새로고침 후 다시 시도해 주세요.");
+	}
+
+	@ExceptionHandler(Exception.class)
+	ResponseEntity<ApiErrorResponse> handleUnexpected(Exception exception) {
+		log.error("Unhandled server exception", exception);
+		return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 오류가 발생했습니다.");
 	}
 
 	private ResponseEntity<ApiErrorResponse> error(HttpStatus status, String code, String message) {

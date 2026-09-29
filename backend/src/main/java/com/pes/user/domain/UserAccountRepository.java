@@ -19,7 +19,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> 
 
 	@Query("""
 			SELECT u FROM UserAccount u
-			WHERE (:search IS NULL
+			WHERE (:search = ''
 			    OR lower(u.username) LIKE lower(concat('%', :search, '%'))
 			    OR lower(u.displayName) LIKE lower(concat('%', :search, '%')))
 			  AND (:active IS NULL OR u.active = :active)

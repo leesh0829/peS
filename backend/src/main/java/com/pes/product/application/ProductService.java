@@ -25,7 +25,7 @@ public class ProductService {
 	}
 
 	public PageResponse<ProductDtos.Response> search(String search, Boolean active, int page, int size) {
-		String normalizedSearch = search == null || search.isBlank() ? null : search.trim();
+		String normalizedSearch = search == null ? "" : search.trim();
 		PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("code").ascending());
 		return PageResponse.from(repository.search(normalizedSearch, active, pageable), ProductDtos.Response::from);
 	}

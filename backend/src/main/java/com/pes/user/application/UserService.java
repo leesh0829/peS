@@ -29,7 +29,7 @@ public class UserService {
 	}
 
 	public PageResponse<UserDtos.Response> search(String search, Boolean active, int page, int size) {
-		String normalizedSearch = search == null || search.isBlank() ? null : search.trim();
+		String normalizedSearch = search == null ? "" : search.trim();
 		PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by(Sort.Direction.DESC, "createdAt"));
 		return PageResponse.from(repository.search(normalizedSearch, active, pageable), UserDtos.Response::from);
 	}

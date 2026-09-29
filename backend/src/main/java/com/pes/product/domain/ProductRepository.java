@@ -14,7 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
 	@Query("""
 			SELECT p FROM Product p
-			WHERE (:search IS NULL
+			WHERE (:search = ''
 			    OR lower(p.code) LIKE lower(concat('%', :search, '%'))
 			    OR lower(p.name) LIKE lower(concat('%', :search, '%')))
 			  AND (:active IS NULL OR p.active = :active)
