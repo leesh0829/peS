@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 
 import { AppShell } from '@/components/app-shell'
-import { ApiError, getCurrentUser, login, logout } from '@/lib/api'
+import { getCurrentUser, login, logout } from '@/lib/api'
 import { DashboardPage } from '@/pages/dashboard-page'
 import { LoginPage } from '@/pages/login-page'
 
@@ -34,8 +34,7 @@ export default function App() {
     )
   }
 
-  const unauthenticated = currentUserQuery.error instanceof ApiError && currentUserQuery.error.status === 401
-  if (unauthenticated) {
+  if (!currentUserQuery.isError && !currentUserQuery.data) {
     return (
       <LoginPage
         onLogin={async (values) => {

@@ -20,7 +20,7 @@ Phase 2는 생산계획을 만들기 전 필요한 사용자 인증과 품목·�
 - 로그인 성공 시 `JSESSIONID` 쿠키를 발급하며 JavaScript에서는 읽을 수 없다.
 - 세션 유휴 만료 시간은 30분이다.
 - 로그인할 때 세션 ID를 교체해 session fixation을 방어한다.
-- CSRF 토큰은 `/api/auth/csrf`에서 발급받아 변경 요청의 `X-XSRF-TOKEN` 헤더로 보낸다.
+- `/api/auth/csrf` 호출로 토큰을 발급하고, SPA는 `XSRF-TOKEN` 쿠키의 원본 값을 변경 요청의 `X-XSRF-TOKEN` 헤더로 보낸다. 응답 본문의 값은 BREACH 보호로 마스킹되므로 헤더에 그대로 사용하지 않는다.
 - 로그인과 로그아웃 직후에는 이전 CSRF 토큰이 제거되므로 프론트엔드가 새 토큰을 다시 발급받는다.
 - 비밀번호는 BCrypt cost 12로 단방향 해시한 값만 저장한다.
 - 다중 인스턴스 배포 전까지 세션 저장소는 애플리케이션 메모리이며, 서버 재시작 시 로그아웃된다.
@@ -67,6 +67,7 @@ production_process
 | Method | Path | 권한 | 용도 |
 |---|---|---|---|
 | `GET` | `/api/auth/csrf` | 공개 | CSRF 토큰 발급 |
+| `GET` | `/api/auth/session` | 공개 | 로그인 여부 확인 |
 | `POST` | `/api/auth/login` | 공개 + CSRF | 세션 로그인 |
 | `POST` | `/api/auth/logout` | 로그인 + CSRF | 세션 로그아웃 |
 | `GET` | `/api/auth/me` | 로그인 | 현재 사용자 |

@@ -32,7 +32,7 @@ public class SecurityConfig {
 						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
 						.sessionFixation(fixation -> fixation.migrateSession()))
 				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers("/api/health", "/actuator/health/**", "/api/auth/csrf", "/api/auth/login").permitAll()
+						.requestMatchers("/api/health", "/actuator/health/**", "/api/auth/csrf", "/api/auth/session", "/api/auth/login").permitAll()
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.GET, "/api/products/**", "/api/processes/**").hasAnyRole("ADMIN", "MANAGER", "WORKER")
 						.requestMatchers("/api/products/**", "/api/processes/**").hasAnyRole("ADMIN", "MANAGER")

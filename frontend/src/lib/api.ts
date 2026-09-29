@@ -6,6 +6,11 @@ type CsrfResponse = {
   token: string
 }
 
+type SessionResponse = {
+  authenticated: boolean
+  user: CurrentUser | null
+}
+
 type ApiErrorBody = {
   message?: string
   fieldErrors?: Record<string, string>
@@ -38,7 +43,16 @@ export async function refreshCsrfToken(): Promise<CsrfResponse> {
   if (!response.ok) {
     throw await readError(response)
   }
-  csrfToken = (await response.json()) as CsrfResponse
+  const tokenResponse = (await response.json()) as CsrfResponse
+  const cookieToken = document.cookie
+    .split('; ')
+    .find((cookie) => cookie.startsWith('XSRF-TOKEN='))
+    ?.split('=')[1]
+
+  csrfToken = {
+    ...tokenResponse,
+    token: cookieToken ? decodeURIComponent(cookieToken) : tokenResponse.token,
+  }
   return csrfToken
 }
 
@@ -98,8 +112,9 @@ export async function logout(): Promise<void> {
   await refreshCsrfToken()
 }
 
-export function getCurrentUser(): Promise<CurrentUser> {
-  return apiFetch<CurrentUser>('/api/auth/me')
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const session = await apiFetch<SessionResponse>('/api/auth/session')
+  return session.authenticated ? session.user : null
 }
 
 export function getErrorMessage(error: unknown): string {

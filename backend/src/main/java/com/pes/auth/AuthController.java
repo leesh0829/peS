@@ -21,16 +21,26 @@ public class AuthController {
 
 	@GetMapping("/me")
 	public CurrentUserResponse me(@AuthenticationPrincipal PesUserPrincipal principal) {
-		return new CurrentUserResponse(
-				principal.id(),
-				principal.username(),
-				principal.displayName(),
-				principal.role());
+		return currentUser(principal);
+	}
+
+	@GetMapping("/session")
+	public SessionResponse session(@AuthenticationPrincipal PesUserPrincipal principal) {
+		return principal == null
+				? new SessionResponse(false, null)
+				: new SessionResponse(true, currentUser(principal));
+	}
+
+	private CurrentUserResponse currentUser(PesUserPrincipal principal) {
+		return new CurrentUserResponse(principal.id(), principal.username(), principal.displayName(), principal.role());
 	}
 
 	public record CsrfResponse(String headerName, String parameterName, String token) {
 	}
 
 	public record CurrentUserResponse(UUID id, String username, String displayName, UserRole role) {
+	}
+
+	public record SessionResponse(boolean authenticated, CurrentUserResponse user) {
 	}
 }
