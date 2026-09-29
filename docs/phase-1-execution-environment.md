@@ -49,6 +49,7 @@ browser :5173
 
 `V1__initialize_application_metadata.sql`은 독립적으로 작성한 최초 마이그레이션이며 `application_metadata` 테이블만 생성한다. 이는 Flyway가 빈 PostgreSQL DB에서 실제로 적용되는 최소 기반을 확인하기 위한 인프라 테이블이다.
 
+- PostgreSQL 18 공식 이미지의 `PGDATA`는 `/var/lib/postgresql/18/docker`이며, 영속 볼륨은 상위 경로 `/var/lib/postgresql`에 마운트한다.
 - JPA 스키마 생성은 `ddl-auto: validate`로 막는다.
 - 이후 모든 업무 테이블 변경은 새 Flyway 파일로 누적한다.
 - 시연용 데이터는 스키마 마이그레이션에 넣지 않는다.
@@ -73,5 +74,6 @@ browser :5173
 
 - 2026-09-29 WSL에서 `scripts/validate-phase1.sh`를 실행해 Gradle 테스트와 `bootJar`, Oxlint, Vite 프로덕션 빌드가 성공했다.
 - Oxlint는 shadcn/ui가 컴포넌트와 variant를 함께 내보내는 두 파일에 Fast Refresh 권고 경고를 냈지만 오류는 없었다.
+- 최초 Windows 기동에서 PostgreSQL 17 이하용 볼륨 경로(`/var/lib/postgresql/data`) 때문에 PostgreSQL 18 컨테이너가 종료되는 문제를 확인하고, 18 이상 공식 경로(`/var/lib/postgresql`)로 수정했다.
 - Docker Compose 전체 기동, Flyway의 실제 PostgreSQL 적용, 브라우저 연결 확인은 현재 WSL 배포판에 Docker CLI/엔진 연결이 없어 실행하지 못했다.
 - Docker Desktop WSL 통합을 활성화한 환경에서 `docker compose up --build` 후 세 healthcheck와 웹 상태 배지를 확인해야 Phase 1의 런타임 완료 기준이 최종 충족된다.
