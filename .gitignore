@@ -8,3 +8,4 @@ Thumbs.db
 # Unused binary from the Vite starter template.
 /frontend/src/assets/hero.png
 /artifacts/
+/.playwright-mcp/

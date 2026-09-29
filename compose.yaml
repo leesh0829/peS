@@ -24,6 +24,7 @@ services:
       DB_URL: jdbc:postgresql://database:5432/pes
       DB_USERNAME: pes
       DB_PASSWORD: pes_local_password
+      SPRING_PROFILES_ACTIVE: dev
     ports:
       - "8080:8080"
     depends_on:

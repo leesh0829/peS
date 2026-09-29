@@ -2,10 +2,11 @@
 
 가상의 부품 제조 공장을 위한 소형 MES 포트폴리오 프로젝트입니다.
 
-현재 저장소는 **Phase 0(자료 분석과 설계)** 을 완료하고 **Phase 1(실행 환경)** 을 구성한 상태입니다. 참고 MES 소스는 포함하지 않았습니다.
+현재 저장소는 **Phase 0(자료 분석과 설계)** 과 **Phase 1(실행 환경)** 을 완료하고 **Phase 2(인증과 기준정보)** 를 구현한 상태입니다. 참고 MES 소스는 포함하지 않았습니다.
 
 - [Phase 0 분석 및 설계](docs/phase-0-analysis-and-design.md)
 - [Phase 1 실행 환경](docs/phase-1-execution-environment.md)
+- [Phase 2 인증과 기준정보](docs/phase-2-auth-and-master-data.md)
 
 ## 목표 흐름
 
@@ -31,6 +32,8 @@ docker compose up --build
 - API 상태: `http://localhost:8080/api/health`
 - Actuator 상태: `http://localhost:8080/actuator/health`
 
+개발 환경 시연 계정은 `admin`, `manager`, `worker`이고 공통 비밀번호는 `pes-demo-1234`입니다. 이 계정은 Compose가 활성화하는 `dev` 프로필에서만 생성됩니다.
+
 종료할 때는 `docker compose down`을 사용합니다. PostgreSQL 데이터는 `postgres-data` 볼륨에 유지되며, 완전히 초기화할 때만 `docker compose down --volumes`를 사용합니다.
 
 ## 로컬 개발과 검증
@@ -43,10 +46,10 @@ docker compose up -d database
 npm --prefix frontend run dev
 ```
 
-Phase 1의 백엔드 테스트와 프론트 프로덕션 빌드는 하나의 명령으로 검증합니다.
+현재 백엔드 테스트와 프론트 린트·프로덕션 빌드는 하나의 명령으로 검증합니다.
 
 ```bash
-bash scripts/validate-phase1.sh
+bash scripts/validate.sh
 ```
 
 `pes_local_password`는 외부 서비스에 쓰지 않는 로컬 Compose 전용 공개 개발값입니다. 실제 배포에서는 `DB_PASSWORD`를 런타임 비밀값으로 주입해야 합니다.

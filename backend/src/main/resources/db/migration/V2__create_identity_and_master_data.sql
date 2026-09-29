@@ -1,0 +1,38 @@
+CREATE TABLE app_user (
+    id UUID PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password_hash VARCHAR(100) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_app_user_username UNIQUE (username),
+    CONSTRAINT ck_app_user_role CHECK (role IN ('ADMIN', 'MANAGER', 'WORKER'))
+);
+
+CREATE TABLE product (
+    id UUID PRIMARY KEY,
+    code VARCHAR(30) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    unit VARCHAR(20) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_product_code UNIQUE (code),
+    CONSTRAINT ck_product_unit CHECK (unit IN ('EACH', 'KILOGRAM'))
+);
+
+CREATE TABLE production_process (
+    id UUID PRIMARY KEY,
+    code VARCHAR(30) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_production_process_code UNIQUE (code)
+);
