@@ -75,5 +75,7 @@ browser :5173
 - 2026-09-29 WSL에서 `scripts/validate-phase1.sh`를 실행해 Gradle 테스트와 `bootJar`, Oxlint, Vite 프로덕션 빌드가 성공했다.
 - Oxlint는 shadcn/ui가 컴포넌트와 variant를 함께 내보내는 두 파일에 Fast Refresh 권고 경고를 냈지만 오류는 없었다.
 - 최초 Windows 기동에서 PostgreSQL 17 이하용 볼륨 경로(`/var/lib/postgresql/data`) 때문에 PostgreSQL 18 컨테이너가 종료되는 문제를 확인하고, 18 이상 공식 경로(`/var/lib/postgresql`)로 수정했다.
-- Docker Compose 전체 기동, Flyway의 실제 PostgreSQL 적용, 브라우저 연결 확인은 현재 WSL 배포판에 Docker CLI/엔진 연결이 없어 실행하지 못했다.
-- Docker Desktop WSL 통합을 활성화한 환경에서 `docker compose up --build` 후 세 healthcheck와 웹 상태 배지를 확인해야 Phase 1의 런타임 완료 기준이 최종 충족된다.
+- 2026-09-29 Windows Docker Desktop에서 PostgreSQL과 백엔드가 `healthy`, 프론트엔드가 `Up`인 것을 확인했다.
+- `/api/health`, `/actuator/health`가 모두 `UP`, 프론트엔드가 HTTP 200을 반환했다.
+- Playwright 브라우저 검증에서 화면의 API 상태 배지가 `정상`으로 표시되고, 빈 화면·오류 오버레이·콘솔 오류가 없음을 확인했다.
+- 이 결과로 Phase 1 완료 기준을 충족했다.
