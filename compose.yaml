@@ -1,0 +1,48 @@
+name: pes
+
+services:
+  database:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: pes
+      POSTGRES_USER: pes
+      POSTGRES_PASSWORD: pes_local_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pes -d pes"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://database:5432/pes
+      DB_USERNAME: pes
+      DB_PASSWORD: pes_local_password
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

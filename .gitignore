@@ -1,0 +1,9 @@
+.env
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Unused binary from the Vite starter template.
+/frontend/src/assets/hero.png
