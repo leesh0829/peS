@@ -2,14 +2,14 @@
 
 가상의 부품 제조 공장을 위한 소형 MES 포트폴리오 프로젝트입니다.
 
-현재 저장소는 **Phase 0~4(자료 분석, 실행 환경, 인증과 기준정보, 계획과 작업지시, 생산실적과 대시보드)** 를 완료했습니다. 참고 MES 소스는 포함하지 않았습니다.
+현재 저장소는 **Phase 0~4**와 **Phase 5A(자재·생산 LOT 추적)** 를 완료했습니다. Phase 5B의 검사·불량코드는 아직 구현하지 않았습니다. 참고 MES 소스는 포함하지 않았습니다.
 
 - [Phase 0 분석 및 설계](docs/phase-0-analysis-and-design.md)
 - [Phase 1 실행 환경](docs/phase-1-execution-environment.md)
 - [Phase 2 인증과 기준정보](docs/phase-2-auth-and-master-data.md)
 - [Phase 3 생산계획과 작업지시](docs/phase-3-planning-and-work-orders.md)
 - [Phase 4 생산실적과 대시보드](docs/phase-4-production-results-and-dashboard.md)
-- [Phase 5A 자재 LOT와 생산 LOT 추적](docs/phase-5a-lot-tracking.md) — 구현 및 검증 진행 중, 검사·불량코드는 별도 5B 단계
+- [Phase 5A 자재 LOT와 생산 LOT 추적](docs/phase-5a-lot-tracking.md) — 실행·통합·브라우저 검증 완료
 
 ## 목표 흐름
 

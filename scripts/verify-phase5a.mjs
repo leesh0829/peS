@@ -36,9 +36,9 @@ const products = (await admin('/api/products?size=100')).data.content
 const processes = (await admin('/api/processes?size=100')).data.content
 const workers = (await admin('/api/workers')).data
 const product = products.find(item => item.active && item.unit === 'EACH')
-const process = processes.find(item => item.active)
+const productionProcess = processes.find(item => item.active)
 const assigned = workers.find(item => item.username === 'worker')
-assert.ok(product && process && assigned, 'Register an active EACH product/process and demo worker first')
+assert.ok(product && productionProcess && assigned, 'Register an active EACH product/process and demo worker first')
 const plan = await admin('/api/production-plans', 'POST', { productId: product.id,
   dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10), targetQuantity: 20 })
 assert.equal(plan.status, 201, JSON.stringify(plan))
@@ -46,7 +46,7 @@ assert.equal((await admin(`/api/production-plans/${plan.data.id}/confirm`, 'POST
 const orders = []
 for (let index = 0; index < 2; index++) {
   const response = await admin('/api/work-orders', 'POST', { productionPlanId: plan.data.id,
-    productionProcessId: process.id, assignedWorkerId: assigned.id, targetQuantity: 10, lotTrackingEnabled: true })
+    productionProcessId: productionProcess.id, assignedWorkerId: assigned.id, targetQuantity: 10, lotTrackingEnabled: true })
   assert.equal(response.status, 201, JSON.stringify(response))
   assert.equal(response.data.lotTrackingEnabled, true)
   orders.push(response.data)
