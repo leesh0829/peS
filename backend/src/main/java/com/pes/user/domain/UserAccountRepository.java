@@ -1,5 +1,6 @@
 package com.pes.user.domain;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> 
 	boolean existsByUsername(String username);
 
 	long countByRoleAndActiveTrue(UserRole role);
+
+	List<UserAccount> findAllByRoleAndActiveTrueOrderByDisplayNameAsc(UserRole role);
 
 	@Query("""
 			SELECT u FROM UserAccount u

@@ -30,6 +30,11 @@ public class GlobalExceptionHandler {
 		return error(HttpStatus.CONFLICT, exception.getCode(), exception.getMessage());
 	}
 
+	@ExceptionHandler(ForbiddenException.class)
+	ResponseEntity<ApiErrorResponse> handleForbidden(ForbiddenException exception) {
+		return error(HttpStatus.FORBIDDEN, exception.getCode(), exception.getMessage());
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
 		Map<String, String> fieldErrors = new LinkedHashMap<>();

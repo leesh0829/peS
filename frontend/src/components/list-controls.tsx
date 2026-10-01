@@ -10,7 +10,16 @@ type ListToolbarProps = {
   onActiveFilterChange: (value: string) => void
   onCreate?: () => void
   createLabel?: string
+  filterLabel?: string
+  filterOptions?: { label: string; value: string }[]
+  searchPlaceholder?: string
 }
+
+const defaultFilterOptions = [
+  { value: '', label: '전체 상태' },
+  { value: 'true', label: '사용' },
+  { value: 'false', label: '미사용' },
+]
 
 export function ListToolbar({
   search,
@@ -19,6 +28,9 @@ export function ListToolbar({
   onActiveFilterChange,
   onCreate,
   createLabel,
+  filterLabel = '사용 상태',
+  filterOptions = defaultFilterOptions,
+  searchPlaceholder = '코드 또는 이름 검색',
 }: ListToolbarProps) {
   return (
     <div className="mb-4 flex flex-col gap-3 rounded-xl border bg-white p-4 sm:flex-row sm:items-center">
@@ -28,19 +40,19 @@ export function ListToolbar({
           aria-label="검색"
           className="pl-9"
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="코드 또는 이름 검색"
+          placeholder={searchPlaceholder}
           value={search}
         />
       </div>
       <select
-        aria-label="사용 상태"
+        aria-label={filterLabel}
         className="h-8 rounded-lg border border-input bg-background px-3 text-sm"
         onChange={(event) => onActiveFilterChange(event.target.value)}
         value={activeFilter}
       >
-        <option value="">전체 상태</option>
-        <option value="true">사용</option>
-        <option value="false">미사용</option>
+        {filterOptions.map((option) => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
       </select>
       {onCreate && createLabel ? (
         <Button onClick={onCreate} type="button">

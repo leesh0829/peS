@@ -1,4 +1,4 @@
-import { Boxes, Factory, Gauge, LogOut, Route, Users } from 'lucide-react'
+import { Boxes, CalendarRange, ClipboardList, Factory, Gauge, LogOut, Route, Users } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,8 @@ export function AppShell({ user, onLogout, isLoggingOut }: AppShellProps) {
     { to: '/', label: '대시보드', icon: Gauge, visible: true },
     { to: '/products', label: '품목 관리', icon: Boxes, visible: true },
     { to: '/processes', label: '공정 관리', icon: Route, visible: true },
+    { to: '/production-plans', label: '생산계획', icon: CalendarRange, visible: canManageMasterData },
+    { to: '/work-orders', label: user.role === 'WORKER' ? '내 작업지시' : '작업지시', icon: ClipboardList, visible: true },
     { to: '/users', label: '사용자 관리', icon: Users, visible: user.role === 'ADMIN' },
   ].filter((item) => item.visible)
 
