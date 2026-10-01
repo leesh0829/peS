@@ -24,6 +24,7 @@ import com.pes.process.domain.ProductionProcess;
 import com.pes.process.domain.ProductionProcessRepository;
 import com.pes.product.domain.Product;
 import com.pes.product.domain.ProductUnit;
+import com.pes.result.domain.ProductionResultRepository;
 import com.pes.user.domain.UserAccount;
 import com.pes.user.domain.UserAccountRepository;
 import com.pes.user.domain.UserRole;
@@ -46,6 +47,9 @@ class WorkOrderServiceTest {
 
 	@Mock
 	private UserAccountRepository userRepository;
+
+	@Mock
+	private ProductionResultRepository productionResultRepository;
 
 	@Test
 	void rejectsQuantityThatExceedsRemainingPlanQuantity() {
@@ -101,8 +105,58 @@ class WorkOrderServiceTest {
 				.hasMessageContaining("대기 상태");
 	}
 
+	@Test
+	void completesOnlyWhenAccumulatedQuantityMatchesTarget() {
+		Fixture fixture = fixture();
+		fixture.plan.confirm();
+		WorkOrder workOrder = new WorkOrder("WO-TEST", fixture.plan, fixture.process, fixture.worker, 100);
+		UUID workOrderId = UUID.randomUUID();
+		ReflectionTestUtils.setField(workOrder, "id", workOrderId);
+		workOrder.start(java.time.Instant.now());
+		ProductionResultRepository.WorkOrderQuantitySummary summary = org.mockito.Mockito.mock(
+				ProductionResultRepository.WorkOrderQuantitySummary.class);
+		when(summary.getProducedQuantity()).thenReturn(100L);
+		when(summary.getGoodQuantity()).thenReturn(95L);
+		when(summary.getDefectQuantity()).thenReturn(5L);
+		when(repository.findByIdForUpdate(workOrderId)).thenReturn(Optional.of(workOrder));
+		when(productionResultRepository.summarizeByWorkOrderId(workOrderId)).thenReturn(Optional.of(summary));
+		PesUserPrincipal principal = new PesUserPrincipal(
+				fixture.workerId, "worker", "hash", "작업자", UserRole.WORKER, true);
+
+		service().complete(workOrderId, principal);
+
+		assertThat(workOrder.getStatus()).isEqualTo(WorkOrderStatus.COMPLETED);
+		assertThat(workOrder.getCompletedAt()).isNotNull();
+		assertThatThrownBy(() -> service().complete(workOrderId, principal))
+				.isInstanceOf(ConflictException.class)
+				.hasMessageContaining("작업 중인 작업지시");
+	}
+
+	@Test
+	void rejectsCompletionBeforeTargetQuantityIsReached() {
+		Fixture fixture = fixture();
+		fixture.plan.confirm();
+		WorkOrder workOrder = new WorkOrder("WO-TEST", fixture.plan, fixture.process, fixture.worker, 100);
+		UUID workOrderId = UUID.randomUUID();
+		ReflectionTestUtils.setField(workOrder, "id", workOrderId);
+		workOrder.start(java.time.Instant.now());
+		ProductionResultRepository.WorkOrderQuantitySummary summary = org.mockito.Mockito.mock(
+				ProductionResultRepository.WorkOrderQuantitySummary.class);
+		when(summary.getProducedQuantity()).thenReturn(99L);
+		when(repository.findByIdForUpdate(workOrderId)).thenReturn(Optional.of(workOrder));
+		when(productionResultRepository.summarizeByWorkOrderId(workOrderId)).thenReturn(Optional.of(summary));
+		PesUserPrincipal principal = new PesUserPrincipal(
+				fixture.workerId, "worker", "hash", "작업자", UserRole.WORKER, true);
+
+		assertThatThrownBy(() -> service().complete(workOrderId, principal))
+				.isInstanceOf(ConflictException.class)
+				.hasMessageContaining("목표수량");
+		assertThat(workOrder.getStatus()).isEqualTo(WorkOrderStatus.IN_PROGRESS);
+	}
+
 	private WorkOrderService service() {
-		return new WorkOrderService(repository, planRepository, processRepository, userRepository);
+		return new WorkOrderService(
+				repository, planRepository, processRepository, userRepository, productionResultRepository);
 	}
 
 	private Fixture fixture() {

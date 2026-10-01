@@ -74,6 +74,14 @@ public class WorkOrder extends BaseEntity {
 		this.startedAt = startedAt;
 	}
 
+	public void complete(Instant completedAt) {
+		if (status != WorkOrderStatus.IN_PROGRESS) {
+			throw new ConflictException("작업 중인 작업지시만 완료할 수 있습니다.");
+		}
+		status = WorkOrderStatus.COMPLETED;
+		this.completedAt = completedAt;
+	}
+
 	public String getWorkOrderNumber() {
 		return workOrderNumber;
 	}

@@ -72,10 +72,44 @@ export type WorkOrder = {
   productionProcess: Pick<ProductionProcess, 'id' | 'code' | 'name'>
   assignedWorker: WorkerOption
   targetQuantity: number
+  producedQuantity: number
+  goodQuantity: number
+  defectQuantity: number
+  remainingQuantity: number
   status: WorkOrderStatus
   startedAt: string | null
   completedAt: string | null
   version: number
   createdAt: string
   updatedAt: string
+}
+
+export type ProductionResult = {
+  id: string
+  workOrder: Pick<WorkOrder, 'id' | 'workOrderNumber' | 'targetQuantity'>
+  product: Pick<Product, 'id' | 'code' | 'name'>
+  producedQuantity: number
+  goodQuantity: number
+  defectQuantity: number
+  recordedBy: WorkerOption
+  recordedAt: string
+}
+
+export type DashboardSummary = {
+  confirmedPlanCount: number
+  workOrders: {
+    waiting: number
+    inProgress: number
+    completed: number
+    total: number
+  }
+  quantities: {
+    planned: number
+    ordered: number
+    produced: number
+    good: number
+    defect: number
+  }
+  planAchievementRate: number | null
+  goodRate: number | null
 }

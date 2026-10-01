@@ -4,6 +4,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +24,7 @@ import com.pes.plan.domain.ProductionPlanRepository;
 import com.pes.plan.domain.ProductionPlanStatus;
 import com.pes.process.domain.ProductionProcess;
 import com.pes.process.domain.ProductionProcessRepository;
+import com.pes.result.domain.ProductionResultRepository;
 import com.pes.user.domain.UserAccount;
 import com.pes.user.domain.UserAccountRepository;
 import com.pes.user.domain.UserRole;
@@ -39,16 +43,19 @@ public class WorkOrderService {
 	private final ProductionPlanRepository productionPlanRepository;
 	private final ProductionProcessRepository processRepository;
 	private final UserAccountRepository userRepository;
+	private final ProductionResultRepository productionResultRepository;
 
 	public WorkOrderService(
 			WorkOrderRepository repository,
 			ProductionPlanRepository productionPlanRepository,
 			ProductionProcessRepository processRepository,
-			UserAccountRepository userRepository) {
+			UserAccountRepository userRepository,
+			ProductionResultRepository productionResultRepository) {
 		this.repository = repository;
 		this.productionPlanRepository = productionPlanRepository;
 		this.processRepository = processRepository;
 		this.userRepository = userRepository;
+		this.productionResultRepository = productionResultRepository;
 	}
 
 	public PageResponse<WorkOrderDtos.Response> search(
@@ -61,7 +68,15 @@ public class WorkOrderService {
 		Page<WorkOrder> workOrders = principal.role() == UserRole.WORKER
 				? repository.searchAssigned(principal.id(), normalizedSearch, status, pageable)
 				: repository.searchAll(normalizedSearch, status, pageable);
-		return PageResponse.from(workOrders, WorkOrderDtos.Response::from);
+		Map<UUID, ProductionResultRepository.WorkOrderQuantitySummary> summaries = workOrders.isEmpty()
+				? Map.of()
+				: productionResultRepository
+						.summarizeByWorkOrderIdIn(workOrders.getContent().stream().map(WorkOrder::getId).toList())
+						.stream()
+						.collect(Collectors.toMap(
+								ProductionResultRepository.WorkOrderQuantitySummary::getWorkOrderId,
+								Function.identity()));
+		return PageResponse.from(workOrders, workOrder -> toResponse(workOrder, summaries.get(workOrder.getId())));
 	}
 
 	@Transactional
@@ -91,7 +106,7 @@ public class WorkOrderService {
 
 		WorkOrder workOrder = new WorkOrder(
 				generateWorkOrderNumber(), plan, process, worker, request.targetQuantity());
-		return WorkOrderDtos.Response.from(repository.saveAndFlush(workOrder));
+		return WorkOrderDtos.Response.from(repository.saveAndFlush(workOrder), 0, 0, 0);
 	}
 
 	@Transactional
@@ -103,7 +118,39 @@ public class WorkOrderService {
 		}
 		workOrder.start(Instant.now());
 		repository.flush();
-		return WorkOrderDtos.Response.from(workOrder);
+		return toResponse(workOrder, productionResultRepository.summarizeByWorkOrderId(id).orElse(null));
+	}
+
+	@Transactional
+	public WorkOrderDtos.Response complete(UUID id, PesUserPrincipal principal) {
+		WorkOrder workOrder = repository.findByIdForUpdate(id)
+				.orElseThrow(() -> new NotFoundException("작업지시를 찾을 수 없습니다."));
+		if (!workOrder.getAssignedWorker().getId().equals(principal.id())) {
+			throw new ForbiddenException("배정된 작업자만 작업을 완료할 수 있습니다.");
+		}
+		if (workOrder.getStatus() != WorkOrderStatus.IN_PROGRESS) {
+			throw new ConflictException("작업 중인 작업지시만 완료할 수 있습니다.");
+		}
+		ProductionResultRepository.WorkOrderQuantitySummary summary = productionResultRepository
+				.summarizeByWorkOrderId(id)
+				.orElse(null);
+		long producedQuantity = summary == null ? 0 : summary.getProducedQuantity();
+		if (producedQuantity != workOrder.getTargetQuantity()) {
+			throw new ConflictException("누적 생산수량이 목표수량과 같을 때만 작업을 완료할 수 있습니다.");
+		}
+		workOrder.complete(Instant.now());
+		repository.flush();
+		return toResponse(workOrder, summary);
+	}
+
+	private WorkOrderDtos.Response toResponse(
+			WorkOrder workOrder,
+			ProductionResultRepository.WorkOrderQuantitySummary summary) {
+		return WorkOrderDtos.Response.from(
+				workOrder,
+				summary == null ? 0 : summary.getProducedQuantity(),
+				summary == null ? 0 : summary.getGoodQuantity(),
+				summary == null ? 0 : summary.getDefectQuantity());
 	}
 
 	private String generateWorkOrderNumber() {

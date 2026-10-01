@@ -57,6 +57,10 @@ public final class WorkOrderDtos {
 			ProcessSummary productionProcess,
 			WorkerSummary assignedWorker,
 			int targetQuantity,
+			long producedQuantity,
+			long goodQuantity,
+			long defectQuantity,
+			long remainingQuantity,
 			WorkOrderStatus status,
 			Instant startedAt,
 			Instant completedAt,
@@ -64,7 +68,11 @@ public final class WorkOrderDtos {
 			Instant createdAt,
 			Instant updatedAt) {
 
-		public static Response from(WorkOrder workOrder) {
+		public static Response from(
+				WorkOrder workOrder,
+				long producedQuantity,
+				long goodQuantity,
+				long defectQuantity) {
 			ProductionPlan plan = workOrder.getProductionPlan();
 			return new Response(
 					workOrder.getId(),
@@ -74,6 +82,10 @@ public final class WorkOrderDtos {
 					ProcessSummary.from(workOrder.getProductionProcess()),
 					WorkerSummary.from(workOrder.getAssignedWorker()),
 					workOrder.getTargetQuantity(),
+					producedQuantity,
+					goodQuantity,
+					defectQuantity,
+					workOrder.getTargetQuantity() - producedQuantity,
 					workOrder.getStatus(),
 					workOrder.getStartedAt(),
 					workOrder.getCompletedAt(),

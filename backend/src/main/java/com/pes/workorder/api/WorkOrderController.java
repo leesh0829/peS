@@ -54,4 +54,11 @@ public class WorkOrderController {
 			@AuthenticationPrincipal PesUserPrincipal principal) {
 		return service.start(id, principal);
 	}
+
+	@PostMapping("/{id}/complete")
+	public WorkOrderDtos.Response complete(
+			@PathVariable UUID id,
+			@AuthenticationPrincipal PesUserPrincipal principal) {
+		return service.complete(id, principal);
+	}
 }

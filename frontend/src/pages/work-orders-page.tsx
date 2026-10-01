@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Play } from 'lucide-react'
+import { CheckCircle2, Play } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { DataTable } from '@/components/data-table'
@@ -23,9 +23,10 @@ const statusLabels = {
   IN_PROGRESS: '작업 중',
   COMPLETED: '완료',
 } as const
+const dateTimeFormatter = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'short', timeStyle: 'short' })
 
 function formatDateTime(value: string | null) {
-  return value ? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '-'
+  return value ? dateTimeFormatter.format(new Date(value)) : '-'
 }
 
 export function WorkOrdersPage({ user }: { user: CurrentUser }) {
@@ -51,6 +52,20 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
     mutationFn: (workOrderId: string) => apiFetch<WorkOrder>(`/api/work-orders/${workOrderId}/start`, { method: 'POST' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['work-orders'] }),
   })
+  const {
+    mutate: completeWorkOrder,
+    isPending: isCompleting,
+    isError: isCompleteError,
+    error: completeError,
+  } = useMutation({
+    mutationFn: (workOrderId: string) => apiFetch<WorkOrder>(`/api/work-orders/${workOrderId}/complete`, { method: 'POST' }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['work-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] }),
+      ])
+    },
+  })
 
   const columns = useMemo<DataColumnDef<WorkOrder>[]>(() => {
     const result: DataColumnDef<WorkOrder>[] = [
@@ -60,6 +75,10 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
       { id: 'process', header: '공정', cell: ({ row }) => `${row.original.productionProcess.code} · ${row.original.productionProcess.name}` },
       { id: 'worker', header: '작업자', cell: ({ row }) => row.original.assignedWorker.displayName },
       { accessorKey: 'targetQuantity', header: '지시수량', cell: ({ row }) => row.original.targetQuantity.toLocaleString() },
+      { accessorKey: 'producedQuantity', header: '생산', cell: ({ row }) => row.original.producedQuantity.toLocaleString() },
+      { accessorKey: 'goodQuantity', header: '양품', cell: ({ row }) => row.original.goodQuantity.toLocaleString() },
+      { accessorKey: 'defectQuantity', header: '불량', cell: ({ row }) => row.original.defectQuantity.toLocaleString() },
+      { accessorKey: 'remainingQuantity', header: '잔여', cell: ({ row }) => row.original.remainingQuantity.toLocaleString() },
       {
         accessorKey: 'status',
         header: '상태',
@@ -76,15 +95,28 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
       result.push({
         id: 'actions',
         header: '',
-        cell: ({ row }) => row.original.status === 'WAITING' && row.original.assignedWorker.id === user.id ? (
-          <Button disabled={isStarting} onClick={() => startWorkOrder(row.original.id)} size="sm">
-            <Play aria-hidden="true" /> 작업 시작
-          </Button>
-        ) : null,
+        cell: ({ row }) => {
+          const workOrder = row.original
+          if (workOrder.status === 'WAITING' && workOrder.assignedWorker.id === user.id) {
+            return (
+              <Button disabled={isStarting} onClick={() => startWorkOrder(workOrder.id)} size="sm">
+                <Play aria-hidden="true" /> 작업 시작
+              </Button>
+            )
+          }
+          if (workOrder.status === 'IN_PROGRESS' && workOrder.remainingQuantity === 0) {
+            return (
+              <Button disabled={isCompleting} onClick={() => completeWorkOrder(workOrder.id)} size="sm" variant="outline">
+                <CheckCircle2 aria-hidden="true" /> 작업 완료
+              </Button>
+            )
+          }
+          return null
+        },
       })
     }
     return result
-  }, [isStarting, startWorkOrder, user.id, user.role])
+  }, [completeWorkOrder, isCompleting, isStarting, startWorkOrder, user.id, user.role])
 
   const data = workOrdersQuery.data
 
@@ -107,6 +139,7 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
         searchPlaceholder="작업지시번호, 계획번호 또는 품목"
       />
       {isStartError ? <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{getErrorMessage(startError)}</p> : null}
+      {isCompleteError ? <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{getErrorMessage(completeError)}</p> : null}
       {workOrdersQuery.isError ? (
         <p className="rounded-xl bg-red-50 p-4 text-red-700">{getErrorMessage(workOrdersQuery.error)}</p>
       ) : (

@@ -32,4 +32,9 @@ public interface ProductionPlanRepository extends JpaRepository<ProductionPlan, 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT p FROM ProductionPlan p JOIN FETCH p.product WHERE p.id = :id")
 	Optional<ProductionPlan> findByIdForUpdate(@Param("id") UUID id);
+
+	long countByStatus(ProductionPlanStatus status);
+
+	@Query("SELECT COALESCE(SUM(p.targetQuantity), 0) FROM ProductionPlan p WHERE p.status = :status")
+	long sumTargetQuantityByStatus(@Param("status") ProductionPlanStatus status);
 }

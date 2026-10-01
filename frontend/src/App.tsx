@@ -12,6 +12,7 @@ const ProcessesPage = lazy(() => import('@/pages/processes-page').then((module) 
 const UsersPage = lazy(() => import('@/pages/users-page').then((module) => ({ default: module.UsersPage })))
 const ProductionPlansPage = lazy(() => import('@/pages/production-plans-page').then((module) => ({ default: module.ProductionPlansPage })))
 const WorkOrdersPage = lazy(() => import('@/pages/work-orders-page').then((module) => ({ default: module.WorkOrdersPage })))
+const ProductionResultsPage = lazy(() => import('@/pages/production-results-page').then((module) => ({ default: module.ProductionResultsPage })))
 
 export default function App() {
   const queryClient = useQueryClient()
@@ -70,11 +71,12 @@ export default function App() {
           />
         )}
       >
-        <Route element={<DashboardPage />} index />
+        <Route element={canManageMasterData ? <DashboardPage /> : <Navigate replace to="/work-orders" />} index />
         <Route element={<ProductsPage canManage={canManageMasterData} />} path="products" />
         <Route element={<ProcessesPage canManage={canManageMasterData} />} path="processes" />
         <Route element={canManageMasterData ? <ProductionPlansPage /> : <Navigate replace to="/work-orders" />} path="production-plans" />
         <Route element={<WorkOrdersPage user={user} />} path="work-orders" />
+        <Route element={<ProductionResultsPage user={user} />} path="production-results" />
         <Route element={user.role === 'ADMIN' ? <UsersPage /> : <Navigate replace to="/" />} path="users" />
         <Route element={<Navigate replace to="/" />} path="*" />
       </Route>

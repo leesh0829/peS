@@ -90,4 +90,9 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
 			GROUP BY w.productionPlan.id
 			""")
 	Optional<PlanAllocation> summarizeByProductionPlanId(@Param("planId") UUID planId);
+
+	long countByStatus(WorkOrderStatus status);
+
+	@Query("SELECT COALESCE(SUM(w.targetQuantity), 0) FROM WorkOrder w")
+	long sumTargetQuantity();
 }

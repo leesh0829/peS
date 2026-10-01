@@ -13,6 +13,7 @@ type ListToolbarProps = {
   filterLabel?: string
   filterOptions?: { label: string; value: string }[]
   searchPlaceholder?: string
+  showFilter?: boolean
 }
 
 const defaultFilterOptions = [
@@ -31,6 +32,7 @@ export function ListToolbar({
   filterLabel = '사용 상태',
   filterOptions = defaultFilterOptions,
   searchPlaceholder = '코드 또는 이름 검색',
+  showFilter = true,
 }: ListToolbarProps) {
   return (
     <div className="mb-4 flex flex-col gap-3 rounded-xl border bg-white p-4 sm:flex-row sm:items-center">
@@ -44,16 +46,18 @@ export function ListToolbar({
           value={search}
         />
       </div>
-      <select
-        aria-label={filterLabel}
-        className="h-8 rounded-lg border border-input bg-background px-3 text-sm"
-        onChange={(event) => onActiveFilterChange(event.target.value)}
-        value={activeFilter}
-      >
-        {filterOptions.map((option) => (
-          <option key={option.value} value={option.value}>{option.label}</option>
-        ))}
-      </select>
+      {showFilter ? (
+        <select
+          aria-label={filterLabel}
+          className="h-8 rounded-lg border border-input bg-background px-3 text-sm"
+          onChange={(event) => onActiveFilterChange(event.target.value)}
+          value={activeFilter}
+        >
+          {filterOptions.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      ) : null}
       {onCreate && createLabel ? (
         <Button onClick={onCreate} type="button">
           <Plus aria-hidden="true" />
