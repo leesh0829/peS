@@ -116,6 +116,19 @@ export type MaterialInput = {
   createdAt: string
 }
 export type ProductLot = { id: string; lotNumber: string; result: ProductionResult }
+export type DefectCode = { id: string; code: string; name: string }
+export type Inspection = {
+  id: string
+  productLot: ProductLot
+  inspectedQuantity: number
+  acceptedQuantity: number
+  rejectedQuantity: number
+  judgement: 'PASS' | 'FAIL'
+  defects: { defectCode: DefectCode; quantity: number }[]
+  inspectedBy: { id: string; displayName: string }
+  inspectedAt: string
+  note: string | null
+}
 export type ProductTrace = { productLot: ProductLot; materials: MaterialInput[] }
 export type MaterialTrace = { materialLot: MaterialLot; inputs: MaterialInput[]; productLots: ProductLot[] }
 

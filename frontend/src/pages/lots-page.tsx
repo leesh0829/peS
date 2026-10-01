@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { apiFetch, getErrorMessage } from '@/lib/api'
-import type { CurrentUser, MaterialInput, MaterialLot, MaterialTrace, PageResponse, ProductLot, ProductTrace } from '@/types'
+import type { CurrentUser, Inspection, MaterialInput, MaterialLot, MaterialTrace, PageResponse, ProductLot, ProductTrace } from '@/types'
 
 const materialSchema = z.object({
   materialCode: z.string().regex(/^[A-Z0-9_-]{2,30}$/, '대문자·숫자·_·-를 사용해 2~30자로 입력하세요.'),
@@ -60,6 +60,8 @@ function TraceDialog({ selection, onClose }: { selection: { kind: 'material' | '
   const product = useQuery({ queryKey: ['lot-trace', 'product', selection.id], enabled: selection.kind === 'product',
     queryFn: () => apiFetch<ProductTrace>(`/api/product-lots/${selection.id}/trace`) })
   const active = selection.kind === 'material' ? material : product
+  const inspection = useQuery({ queryKey: ['lot-inspection', selection.id], enabled: selection.kind === 'product',
+    queryFn: () => apiFetch<{ inspection: Inspection | null }>(`/api/product-lots/${selection.id}/inspection`) })
   return <Dialog open onOpenChange={open => { if (!open) onClose() }}><DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
     <DialogHeader><DialogTitle>LOT 계보 상세</DialogTitle><DialogDescription>작업지시 단위 연결입니다. 개별 부품의 자재 배분·검사 합격·가용재고를 의미하지 않습니다.</DialogDescription></DialogHeader>
     {active.isPending ? <p>불러오는 중…</p> : null}
@@ -76,6 +78,13 @@ function TraceDialog({ selection, onClose }: { selection: { kind: 'material' | '
       <p className="text-sm">{product.data.productLot.result.product.name} · {product.data.productLot.result.workOrder.workOrderNumber}</p>
       <p className="text-sm">생산 {product.data.productLot.result.producedQuantity} / 양품 {product.data.productLot.result.goodQuantity} / 불량 {product.data.productLot.result.defectQuantity}</p>
       <h3 className="font-semibold">연결된 자재 LOT</h3><Inputs inputs={product.data.materials} />
+      <h3 className="font-semibold">검사 결과</h3>
+      {inspection.isPending ? <p className="text-sm">검사 확인 중…</p> : null}
+      {inspection.isError ? <p role="alert" className="text-destructive">{getErrorMessage(inspection.error)}</p> : null}
+      {inspection.data?.inspection ? <>
+        <p className="text-sm">{inspection.data.inspection.judgement === 'PASS' ? '합격' : '불합격'} · 검사 {inspection.data.inspection.inspectedQuantity} / 합격 {inspection.data.inspection.acceptedQuantity} / 불량 {inspection.data.inspection.rejectedQuantity}</p>
+        <ul className="text-sm">{inspection.data.inspection.defects.map(defect => <li key={defect.defectCode.id}>{defect.defectCode.code} · {defect.defectCode.name} · {defect.quantity}개</li>)}</ul>
+      </> : inspection.data ? <p className="text-sm text-muted-foreground">미검사</p> : null}
     </> : null}
     <p className="text-xs text-muted-foreground">작업자는 본인에게 배정된 작업지시의 연결만 조회합니다.</p>
   </DialogContent></Dialog>

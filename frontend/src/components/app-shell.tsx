@@ -29,6 +29,7 @@ export function AppShell({ user, onLogout, isLoggingOut }: AppShellProps) {
     { to: '/work-orders', label: user.role === 'WORKER' ? '내 작업지시' : '작업지시', icon: ClipboardList, visible: true },
     { to: '/production-results', label: '생산실적', icon: ClipboardCheck, visible: true },
     { to: '/lot-trace', label: 'LOT 추적', icon: Boxes, visible: true },
+    { to: '/quality', label: '검사·불량', icon: ClipboardCheck, visible: true },
     { to: '/users', label: '사용자 관리', icon: Users, visible: user.role === 'ADMIN' },
   ].filter((item) => item.visible)
 

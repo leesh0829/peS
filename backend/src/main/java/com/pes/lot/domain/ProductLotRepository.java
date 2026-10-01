@@ -9,6 +9,22 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 public interface ProductLotRepository extends JpaRepository<ProductLot, UUID> {
+    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT l FROM ProductLot l WHERE l.id = :id")
+    Optional<ProductLot> findByIdForUpdate(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"productionResult", "productionResult.workOrder",
+        "productionResult.workOrder.productionPlan", "productionResult.workOrder.productionPlan.product",
+        "productionResult.recordedBy"})
+    @Query("""
+        SELECT l FROM ProductLot l
+        WHERE l.productionResult.workOrder.status = :status
+        AND NOT EXISTS (SELECT i.id FROM InspectionResult i WHERE i.productLot = l)
+        AND (:search = '' OR lower(l.lotNumber) LIKE lower(concat('%', :search, '%'))
+            OR lower(l.productionResult.workOrder.workOrderNumber) LIKE lower(concat('%', :search, '%')))
+        """)
+    Page<ProductLot> searchInspectionCandidates(@Param("search") String search,
+        @Param("status") com.pes.workorder.domain.WorkOrderStatus status, Pageable pageable);
     @EntityGraph(attributePaths = {"productionResult", "productionResult.workOrder",
         "productionResult.workOrder.productionPlan", "productionResult.workOrder.productionPlan.product",
         "productionResult.workOrder.assignedWorker", "productionResult.recordedBy"})
