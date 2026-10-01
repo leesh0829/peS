@@ -2,7 +2,7 @@
 
 가상의 부품 제조 공장을 위한 소형 MES 포트폴리오 프로젝트입니다.
 
-현재 저장소는 **Phase 0(자료 분석과 설계)**, **Phase 1(실행 환경)**, **Phase 2(인증과 기준정보)** 를 완료했으며, Phase 3의 생산계획과 작업지시를 구현하고 있습니다. 참고 MES 소스는 포함하지 않았습니다.
+현재 저장소는 **Phase 0(자료 분석과 설계)**, **Phase 1(실행 환경)**, **Phase 2(인증과 기준정보)**, **Phase 3(생산계획과 작업지시)** 를 완료했습니다. 다음 구현 범위는 Phase 4의 생산실적과 대시보드입니다. 참고 MES 소스는 포함하지 않았습니다.
 
 - [Phase 0 분석 및 설계](docs/phase-0-analysis-and-design.md)
 - [Phase 1 실행 환경](docs/phase-1-execution-environment.md)
