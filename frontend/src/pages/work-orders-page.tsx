@@ -6,6 +6,7 @@ import { DataTable } from '@/components/data-table'
 import { type DataColumnDef } from '@/components/data-table-config'
 import { ListToolbar, Pagination } from '@/components/list-controls'
 import { Badge } from '@/components/ui/badge'
+import { WorkOrderMaterialDialog } from '@/components/work-order-material-dialog'
 import { Button } from '@/components/ui/button'
 import { apiFetch, getErrorMessage } from '@/lib/api'
 import type { CurrentUser, PageResponse, WorkOrder } from '@/types'
@@ -34,6 +35,7 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(0)
+  const [materialOrder, setMaterialOrder] = useState<WorkOrder | null>(null)
 
   const params = new URLSearchParams({ page: String(page), size: '20' })
   if (search.trim()) params.set('search', search.trim())
@@ -70,6 +72,8 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
   const columns = useMemo<DataColumnDef<WorkOrder>[]>(() => {
     const result: DataColumnDef<WorkOrder>[] = [
       { accessorKey: 'workOrderNumber', header: '작업지시번호' },
+      { id: 'materials', header: 'LOT 추적', cell: ({ row }) => row.original.lotTrackingEnabled
+        ? <Button size="sm" variant="outline" onClick={() => setMaterialOrder(row.original)}>자재 LOT</Button> : '미사용' },
       { id: 'plan', header: '계획번호', cell: ({ row }) => row.original.productionPlan.planNumber },
       { id: 'product', header: '품목', cell: ({ row }) => `${row.original.product.code} · ${row.original.product.name}` },
       { id: 'process', header: '공정', cell: ({ row }) => `${row.original.productionProcess.code} · ${row.original.productionProcess.name}` },
@@ -146,6 +150,8 @@ export function WorkOrdersPage({ user }: { user: CurrentUser }) {
         <DataTable columns={columns} data={data?.content ?? emptyWorkOrders} emptyMessage={workOrdersQuery.isPending ? '불러오는 중…' : '조회할 작업지시가 없습니다.'} />
       )}
       {data ? <Pagination onPageChange={setPage} page={data.page} totalElements={data.totalElements} totalPages={data.totalPages} /> : null}
+      {materialOrder ? <WorkOrderMaterialDialog key={materialOrder.id} order={materialOrder}
+        canInput={user.role === 'WORKER' && materialOrder.status === 'WAITING'} onClose={() => setMaterialOrder(null)} /> : null}
     </section>
   )
 }

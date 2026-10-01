@@ -13,6 +13,7 @@ const UsersPage = lazy(() => import('@/pages/users-page').then((module) => ({ de
 const ProductionPlansPage = lazy(() => import('@/pages/production-plans-page').then((module) => ({ default: module.ProductionPlansPage })))
 const WorkOrdersPage = lazy(() => import('@/pages/work-orders-page').then((module) => ({ default: module.WorkOrdersPage })))
 const ProductionResultsPage = lazy(() => import('@/pages/production-results-page').then((module) => ({ default: module.ProductionResultsPage })))
+const LotsPage = lazy(() => import('@/pages/lots-page').then((module) => ({ default: module.LotsPage })))
 
 export default function App() {
   const queryClient = useQueryClient()
@@ -77,6 +78,7 @@ export default function App() {
         <Route element={canManageMasterData ? <ProductionPlansPage /> : <Navigate replace to="/work-orders" />} path="production-plans" />
         <Route element={<WorkOrdersPage user={user} />} path="work-orders" />
         <Route element={<ProductionResultsPage user={user} />} path="production-results" />
+        <Route element={<LotsPage user={user} />} path="lot-trace" />
         <Route element={user.role === 'ADMIN' ? <UsersPage /> : <Navigate replace to="/" />} path="users" />
         <Route element={<Navigate replace to="/" />} path="*" />
       </Route>

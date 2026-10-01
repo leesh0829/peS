@@ -75,6 +75,7 @@ function ProductionResultDialog({ open, onOpenChange }: { open: boolean; onOpenC
         queryClient.invalidateQueries({ queryKey: ['production-results'] }),
         queryClient.invalidateQueries({ queryKey: ['work-orders'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] }),
+        queryClient.invalidateQueries({ queryKey: ['product-lots'] }),
       ])
       onOpenChange(false)
     },

@@ -30,6 +30,7 @@ const planSchema = z.object({
 })
 
 const workOrderSchema = z.object({
+  lotTrackingEnabled: z.boolean(),
   productionProcessId: z.string().min(1, '공정을 선택해 주세요.'),
   assignedWorkerId: z.string().min(1, '작업자를 선택해 주세요.'),
   targetQuantity: z.number().int().min(1, '지시수량은 1 이상이어야 합니다.'),
@@ -151,11 +152,11 @@ function WorkOrderDialog({
     setError,
   } = useForm<WorkOrderValues>({
     resolver: zodResolver(workOrderSchema),
-    defaultValues: { productionProcessId: '', assignedWorkerId: '', targetQuantity: 1 },
+    defaultValues: { productionProcessId: '', assignedWorkerId: '', targetQuantity: 1, lotTrackingEnabled: false },
   })
 
   useEffect(() => {
-    if (open) reset({ productionProcessId: '', assignedWorkerId: '', targetQuantity: plan?.remainingQuantity ?? 1 })
+    if (open) reset({ productionProcessId: '', assignedWorkerId: '', targetQuantity: plan?.remainingQuantity ?? 1, lotTrackingEnabled: false })
   }, [open, plan, reset])
 
   const mutation = useMutation({
@@ -208,6 +209,10 @@ function WorkOrderDialog({
             <Input id="order-target-quantity" max={plan?.remainingQuantity} min={1} type="number" {...register('targetQuantity', { valueAsNumber: true })} />
             {errors.targetQuantity ? <p className="text-sm text-destructive">{errors.targetQuantity.message}</p> : null}
           </div>
+          <Label className="flex items-center gap-2" htmlFor="order-lot-tracking">
+            <input id="order-lot-tracking" type="checkbox" {...register('lotTrackingEnabled')} />
+            LOT 추적 사용 (EACH 품목, 자재 1개 → 부품 1개)
+          </Label>
           {errors.root ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{errors.root.message}</p> : null}
           <DialogFooter>
             <Button disabled={mutation.isPending || !plan} type="submit">{mutation.isPending ? '저장 중…' : '작업지시 저장'}</Button>

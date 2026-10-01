@@ -22,7 +22,11 @@ public final class WorkOrderDtos {
 			@NotNull UUID productionPlanId,
 			@NotNull UUID productionProcessId,
 			@NotNull UUID assignedWorkerId,
-			@Min(1) int targetQuantity) {
+			@Min(1) int targetQuantity,
+			boolean lotTrackingEnabled) {
+		public CreateRequest(UUID productionPlanId, UUID productionProcessId, UUID assignedWorkerId, int targetQuantity) {
+			this(productionPlanId, productionProcessId, assignedWorkerId, targetQuantity, false);
+		}
 	}
 
 	public record PlanSummary(UUID id, String planNumber) {
@@ -57,6 +61,7 @@ public final class WorkOrderDtos {
 			ProcessSummary productionProcess,
 			WorkerSummary assignedWorker,
 			int targetQuantity,
+			boolean lotTrackingEnabled,
 			long producedQuantity,
 			long goodQuantity,
 			long defectQuantity,
@@ -82,6 +87,7 @@ public final class WorkOrderDtos {
 					ProcessSummary.from(workOrder.getProductionProcess()),
 					WorkerSummary.from(workOrder.getAssignedWorker()),
 					workOrder.getTargetQuantity(),
+					workOrder.isLotTrackingEnabled(),
 					producedQuantity,
 					goodQuantity,
 					defectQuantity,

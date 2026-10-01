@@ -32,6 +32,8 @@ import com.pes.workorder.api.WorkOrderDtos;
 import com.pes.workorder.domain.WorkOrder;
 import com.pes.workorder.domain.WorkOrderRepository;
 import com.pes.workorder.domain.WorkOrderStatus;
+import com.pes.lot.domain.WorkOrderMaterialRepository;
+import com.pes.product.domain.ProductUnit;
 
 @Service
 @Transactional(readOnly = true)
@@ -44,18 +46,21 @@ public class WorkOrderService {
 	private final ProductionProcessRepository processRepository;
 	private final UserAccountRepository userRepository;
 	private final ProductionResultRepository productionResultRepository;
+	private final WorkOrderMaterialRepository materialRepository;
 
 	public WorkOrderService(
 			WorkOrderRepository repository,
 			ProductionPlanRepository productionPlanRepository,
 			ProductionProcessRepository processRepository,
 			UserAccountRepository userRepository,
-			ProductionResultRepository productionResultRepository) {
+			ProductionResultRepository productionResultRepository,
+			WorkOrderMaterialRepository materialRepository) {
 		this.repository = repository;
 		this.productionPlanRepository = productionPlanRepository;
 		this.processRepository = processRepository;
 		this.userRepository = userRepository;
 		this.productionResultRepository = productionResultRepository;
+		this.materialRepository = materialRepository;
 	}
 
 	public PageResponse<WorkOrderDtos.Response> search(
@@ -106,6 +111,12 @@ public class WorkOrderService {
 
 		WorkOrder workOrder = new WorkOrder(
 				generateWorkOrderNumber(), plan, process, worker, request.targetQuantity());
+		if (request.lotTrackingEnabled()) {
+			if (plan.getProduct().getUnit() != ProductUnit.EACH) {
+				throw new ConflictException("LOT 추적은 개수(EACH) 단위 품목만 지원합니다.");
+			}
+			workOrder.enableLotTracking();
+		}
 		return WorkOrderDtos.Response.from(repository.saveAndFlush(workOrder), 0, 0, 0);
 	}
 
@@ -115,6 +126,9 @@ public class WorkOrderService {
 				.orElseThrow(() -> new NotFoundException("작업지시를 찾을 수 없습니다."));
 		if (!workOrder.getAssignedWorker().getId().equals(principal.id())) {
 			throw new ForbiddenException("배정된 작업자만 작업을 시작할 수 있습니다.");
+		}
+		if (workOrder.isLotTrackingEnabled() && materialRepository.sumByWorkOrderId(id) != workOrder.getTargetQuantity()) {
+			throw new ConflictException("자재 투입수량이 목표수량과 같아야 작업을 시작할 수 있습니다.");
 		}
 		workOrder.start(Instant.now());
 		repository.flush();

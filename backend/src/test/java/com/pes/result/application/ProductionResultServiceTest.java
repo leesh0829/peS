@@ -28,6 +28,7 @@ import com.pes.product.domain.ProductUnit;
 import com.pes.result.api.ProductionResultDtos;
 import com.pes.result.domain.ProductionResult;
 import com.pes.result.domain.ProductionResultRepository;
+import com.pes.lot.domain.ProductLotRepository;
 import com.pes.user.domain.UserAccount;
 import com.pes.user.domain.UserRole;
 import com.pes.workorder.domain.WorkOrder;
@@ -35,6 +36,8 @@ import com.pes.workorder.domain.WorkOrderRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionResultServiceTest {
+	@Mock
+	private ProductLotRepository productLotRepository;
 
 	@Mock
 	private ProductionResultRepository repository;
@@ -44,7 +47,7 @@ class ProductionResultServiceTest {
 
 	@Test
 	void rejectsWhenProducedDoesNotEqualGoodPlusDefect() {
-		ProductionResultService service = new ProductionResultService(repository, workOrderRepository);
+		ProductionResultService service = new ProductionResultService(repository, workOrderRepository, productLotRepository);
 
 		assertThatThrownBy(() -> service.create(
 				UUID.randomUUID(),
@@ -57,7 +60,7 @@ class ProductionResultServiceTest {
 
 	@Test
 	void rejectsNegativeQuantity() {
-		ProductionResultService service = new ProductionResultService(repository, workOrderRepository);
+		ProductionResultService service = new ProductionResultService(repository, workOrderRepository, productLotRepository);
 
 		assertThatThrownBy(() -> service.create(
 				UUID.randomUUID(),
@@ -72,7 +75,7 @@ class ProductionResultServiceTest {
 		Fixture fixture = fixture();
 		when(workOrderRepository.findByIdForUpdate(fixture.workOrderId)).thenReturn(Optional.of(fixture.workOrder));
 		when(repository.sumProducedQuantityByWorkOrderId(fixture.workOrderId)).thenReturn(95L);
-		ProductionResultService service = new ProductionResultService(repository, workOrderRepository);
+		ProductionResultService service = new ProductionResultService(repository, workOrderRepository, productLotRepository);
 
 		assertThatThrownBy(() -> service.create(
 				fixture.workOrderId,
@@ -87,7 +90,7 @@ class ProductionResultServiceTest {
 		Fixture fixture = fixture();
 		fixture.workOrder.complete(Instant.now());
 		when(workOrderRepository.findByIdForUpdate(fixture.workOrderId)).thenReturn(Optional.of(fixture.workOrder));
-		ProductionResultService service = new ProductionResultService(repository, workOrderRepository);
+		ProductionResultService service = new ProductionResultService(repository, workOrderRepository, productLotRepository);
 
 		assertThatThrownBy(() -> service.create(
 				fixture.workOrderId,
@@ -100,6 +103,7 @@ class ProductionResultServiceTest {
 	@Test
 	void recordsValidIncrementalResult() {
 		Fixture fixture = fixture();
+		fixture.workOrder.enableLotTracking();
 		when(workOrderRepository.findByIdForUpdate(fixture.workOrderId)).thenReturn(Optional.of(fixture.workOrder));
 		when(repository.sumProducedQuantityByWorkOrderId(fixture.workOrderId)).thenReturn(90L);
 		when(repository.saveAndFlush(any(ProductionResult.class))).thenAnswer(invocation -> {
@@ -108,7 +112,7 @@ class ProductionResultServiceTest {
 			ReflectionTestUtils.setField(result, "createdAt", Instant.now());
 			return result;
 		});
-		ProductionResultService service = new ProductionResultService(repository, workOrderRepository);
+		ProductionResultService service = new ProductionResultService(repository, workOrderRepository, productLotRepository);
 
 		ProductionResultDtos.Response response = service.create(
 				fixture.workOrderId,
@@ -117,6 +121,7 @@ class ProductionResultServiceTest {
 
 		assertThat(response.producedQuantity()).isEqualTo(10);
 		assertThat(response.goodQuantity() + response.defectQuantity()).isEqualTo(response.producedQuantity());
+		org.mockito.Mockito.verify(productLotRepository).saveAndFlush(any(com.pes.lot.domain.ProductLot.class));
 	}
 
 	private Fixture fixture() {

@@ -39,6 +39,13 @@ public class WorkOrder extends BaseEntity {
 	@Column(name = "target_quantity", nullable = false)
 	private int targetQuantity;
 
+	@Column(name = "lot_tracking_enabled", nullable = false)
+	private boolean lotTrackingEnabled;
+
+	public boolean isLotTrackingEnabled() { return lotTrackingEnabled; }
+
+	public void enableLotTracking() { this.lotTrackingEnabled = true; }
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private WorkOrderStatus status;

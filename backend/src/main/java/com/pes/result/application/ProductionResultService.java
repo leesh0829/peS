@@ -21,6 +21,10 @@ import com.pes.user.domain.UserRole;
 import com.pes.workorder.domain.WorkOrder;
 import com.pes.workorder.domain.WorkOrderRepository;
 import com.pes.workorder.domain.WorkOrderStatus;
+import com.pes.lot.domain.ProductLot;
+import com.pes.lot.domain.ProductLotRepository;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,12 +32,15 @@ public class ProductionResultService {
 
 	private final ProductionResultRepository repository;
 	private final WorkOrderRepository workOrderRepository;
+	private final ProductLotRepository productLotRepository;
 
 	public ProductionResultService(
 			ProductionResultRepository repository,
-			WorkOrderRepository workOrderRepository) {
+			WorkOrderRepository workOrderRepository,
+			ProductLotRepository productLotRepository) {
 		this.repository = repository;
 		this.workOrderRepository = workOrderRepository;
+		this.productLotRepository = productLotRepository;
 	}
 
 	public PageResponse<ProductionResultDtos.Response> search(
@@ -75,14 +82,20 @@ public class ProductionResultService {
 				request.goodQuantity(),
 				request.defectQuantity(),
 				workOrder.getAssignedWorker());
-		return ProductionResultDtos.Response.from(repository.saveAndFlush(result));
+		result = repository.saveAndFlush(result);
+		if (workOrder.isLotTrackingEnabled()) {
+			String number = "PL-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-"
+					+ UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+			productLotRepository.saveAndFlush(new ProductLot(number, result));
+		}
+		return ProductionResultDtos.Response.from(result);
 	}
 
 	private void validateQuantities(ProductionResultDtos.CreateRequest request) {
 		if (request.producedQuantity() <= 0 || request.goodQuantity() < 0 || request.defectQuantity() < 0) {
 			throw new InvalidRequestException("생산수량은 1 이상이고 양품·불량수량은 0 이상이어야 합니다.");
 		}
-		if (request.producedQuantity() != request.goodQuantity() + request.defectQuantity()) {
+		if (request.producedQuantity() != (long) request.goodQuantity() + request.defectQuantity()) {
 			throw new InvalidRequestException("생산수량은 양품수량과 불량수량의 합과 같아야 합니다.");
 		}
 	}

@@ -65,6 +65,8 @@ export type ProductionPlan = {
 }
 
 export type WorkOrder = {
+
+  lotTrackingEnabled: boolean
   id: string
   workOrderNumber: string
   productionPlan: Pick<ProductionPlan, 'id' | 'planNumber'>
@@ -94,6 +96,28 @@ export type ProductionResult = {
   recordedBy: WorkerOption
   recordedAt: string
 }
+
+export type MaterialLot = {
+  id: string
+  lotNumber: string
+  materialCode: string
+  materialName: string
+  receivedQuantity: number
+  createdAt: string
+}
+export type MaterialInput = {
+  id: string
+  workOrderId: string
+  workOrderNumber: string
+  status: WorkOrderStatus
+  materialLot: MaterialLot
+  inputQuantity: number
+  recordedBy: string
+  createdAt: string
+}
+export type ProductLot = { id: string; lotNumber: string; result: ProductionResult }
+export type ProductTrace = { productLot: ProductLot; materials: MaterialInput[] }
+export type MaterialTrace = { materialLot: MaterialLot; inputs: MaterialInput[]; productLots: ProductLot[] }
 
 export type DashboardSummary = {
   confirmedPlanCount: number

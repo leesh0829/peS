@@ -25,6 +25,7 @@ import com.pes.process.domain.ProductionProcessRepository;
 import com.pes.product.domain.Product;
 import com.pes.product.domain.ProductUnit;
 import com.pes.result.domain.ProductionResultRepository;
+import com.pes.lot.domain.WorkOrderMaterialRepository;
 import com.pes.user.domain.UserAccount;
 import com.pes.user.domain.UserAccountRepository;
 import com.pes.user.domain.UserRole;
@@ -35,6 +36,8 @@ import com.pes.workorder.domain.WorkOrderStatus;
 
 @ExtendWith(MockitoExtension.class)
 class WorkOrderServiceTest {
+	@Mock
+	private WorkOrderMaterialRepository materialRepository;
 
 	@Mock
 	private WorkOrderRepository repository;
@@ -156,7 +159,21 @@ class WorkOrderServiceTest {
 
 	private WorkOrderService service() {
 		return new WorkOrderService(
-				repository, planRepository, processRepository, userRepository, productionResultRepository);
+				repository, planRepository, processRepository, userRepository, productionResultRepository, materialRepository);
+	}
+
+	@Test
+	void trackedOrderCannotStartWithInsufficientMaterial() {
+		Fixture fixture = fixture();
+		WorkOrder order = new WorkOrder("WO-TRACKED", fixture.plan, fixture.process, fixture.worker, 100);
+		order.enableLotTracking();
+		UUID id = UUID.randomUUID();
+		ReflectionTestUtils.setField(order, "id", id);
+		when(repository.findByIdForUpdate(id)).thenReturn(Optional.of(order));
+		when(materialRepository.sumByWorkOrderId(id)).thenReturn(99L);
+		var principal = new PesUserPrincipal(fixture.workerId, "worker", "hash", "작업자", UserRole.WORKER, true);
+		assertThatThrownBy(() -> service().start(id, principal)).isInstanceOf(ConflictException.class).hasMessageContaining("자재 투입수량");
+		assertThat(order.getStatus()).isEqualTo(WorkOrderStatus.WAITING);
 	}
 
 	private Fixture fixture() {
