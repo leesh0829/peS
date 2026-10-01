@@ -52,3 +52,10 @@ Request/Response DTO, Bean Validation, 기존 일관된 오류 응답과 세션/
 WSL의 `bash scripts/validate.sh`로 백엔드 테스트·bootJar 및 프론트엔드 lint·타입 검사·빌드를 확인한다. 기존 UI 컴포넌트 Fast Refresh 경고는 빌드 실패와 구분한다.
 
 실제 Docker 환경에서는 재빌드 후 V6 적용, 검사 대기 LOT 조회, PASS/FAIL 등록, 중복 요청 거부, 역할별 조회, LOT 상세 연결과 생산 집계 불변을 확인해야 한다. 이 실제 DB·브라우저 확인 전에는 Phase 5B 전체 완료로 간주하지 않는다.
+
+### 2026-10-01 실제 실행 확인
+
+- 사용자 제공 Docker 로그에서 PostgreSQL·백엔드 healthy 및 Flyway V6 적용 성공을 확인했다.
+- WSL에서 `node scripts/verify-phase5b.mjs`를 실행해 실제 API 검증을 통과했다. 수량 합계·음수·부분 검사·생산 불량의 합격 처리·중복 코드 거부, 작업자 관리 API 403, 동시 등록 201/409, PASS/FAIL 저장, 작업자 LOT별 검사 조회, 판정별 목록, 검사 대기 목록 제외 및 대시보드 불변을 확인했다.
+- Playwright로 브라우저 로그인, 검사 목록의 두 판정 및 불합격 상세의 복수 불량내역을 확인했다. 로그인 후 검사 화면 콘솔 오류 0건이며 화면도 캡처해 확인했다. 모든 입력 폼·모든 역할의 화면 동작을 검증했다는 의미는 아니다.
+- 검증은 기존 Phase 5A 가상 LOT 두 건에 검사 두 건과 가상 불량코드 두 건을 추가했다. 데이터는 개발 DB에 보존한다. 스크립트 재실행에는 새로운 미검사 6/5/1 및 4/4/0 LOT가 필요하며 `node scripts/verify-phase5a.mjs`로 생성할 수 있다. 실제 업무 데이터가 있는 환경에는 실행하지 않는다.
