@@ -35,7 +35,7 @@ public class ProductService {
 		if (repository.existsByCode(request.code())) {
 			throw new ConflictException("이미 사용 중인 품목 코드입니다.");
 		}
-		return ProductDtos.Response.from(repository.save(new Product(request.code(), request.name(), request.unit())));
+		return ProductDtos.Response.from(repository.saveAndFlush(new Product(request.code(), request.name(), request.unit())));
 	}
 
 	@Transactional
@@ -46,6 +46,7 @@ public class ProductService {
 			throw new ConflictException("다른 사용자가 먼저 변경했습니다. 새로고침 후 다시 시도해 주세요.");
 		}
 		product.update(request.name(), request.unit(), request.active());
+		repository.flush();
 		return ProductDtos.Response.from(product);
 	}
 }

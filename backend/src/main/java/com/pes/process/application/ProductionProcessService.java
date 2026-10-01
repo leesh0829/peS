@@ -36,7 +36,7 @@ public class ProductionProcessService {
 			throw new ConflictException("이미 사용 중인 공정 코드입니다.");
 		}
 		ProductionProcess process = new ProductionProcess(request.code(), request.name(), request.description());
-		return ProcessDtos.Response.from(repository.save(process));
+		return ProcessDtos.Response.from(repository.saveAndFlush(process));
 	}
 
 	@Transactional
@@ -47,6 +47,7 @@ public class ProductionProcessService {
 			throw new ConflictException("다른 사용자가 먼저 변경했습니다. 새로고침 후 다시 시도해 주세요.");
 		}
 		process.update(request.name(), request.description(), request.active());
+		repository.flush();
 		return ProcessDtos.Response.from(process);
 	}
 }

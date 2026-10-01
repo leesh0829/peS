@@ -49,7 +49,7 @@ class UserServiceTest {
 	void hashesPasswordWhenCreatingUser() {
 		when(repository.existsByUsername("worker01")).thenReturn(false);
 		when(passwordEncoder.encode("secure-pass-1234")).thenReturn("hashed-password");
-		when(repository.save(any(UserAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(repository.saveAndFlush(any(UserAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
 		UserService service = new UserService(repository, passwordEncoder);
 
 		UserDtos.Response response = service.create(

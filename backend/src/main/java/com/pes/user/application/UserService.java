@@ -45,7 +45,7 @@ public class UserService {
 				passwordEncoder.encode(request.password()),
 				request.displayName(),
 				request.role());
-		return UserDtos.Response.from(repository.save(user));
+		return UserDtos.Response.from(repository.saveAndFlush(user));
 	}
 
 	@Transactional
@@ -65,6 +65,7 @@ public class UserService {
 		}
 
 		user.update(request.displayName(), request.role(), request.active());
+		repository.flush();
 		return UserDtos.Response.from(user);
 	}
 }
