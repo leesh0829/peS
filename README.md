@@ -11,6 +11,7 @@
 - [Phase 4 생산실적과 대시보드](docs/phase-4-production-results-and-dashboard.md)
 - [Phase 5A 자재 LOT와 생산 LOT 추적](docs/phase-5a-lot-tracking.md) — 실행·통합·브라우저 검증 완료
 - [Phase 5B 검사와 불량코드](docs/phase-5b-quality-inspections.md) — 자동 테스트·실제 API·목록/상세 브라우저 확인
+- [Phase 6 LOT 라벨 발행 이력](docs/phase-6-label-history.md) — 구현, 실제 V7 적용·화면 확인 대기
 
 ## 목표 흐름
 

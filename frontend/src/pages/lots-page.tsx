@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { DataTable } from '@/components/data-table'
+import { LotLabels } from '@/components/lot-labels'
 import type { DataColumnDef } from '@/components/data-table-config'
 import { ListToolbar, Pagination } from '@/components/list-controls'
 import { Button } from '@/components/ui/button'
@@ -54,7 +55,7 @@ function Inputs({ inputs }: { inputs: MaterialInput[] }) {
   </li>)}{inputs.length === 0 ? <li className="text-muted-foreground">연결된 자재 투입이 없습니다.</li> : null}</ul>
 }
 
-function TraceDialog({ selection, onClose }: { selection: { kind: 'material' | 'product'; id: string }; onClose: () => void }) {
+function TraceDialog({ selection, onClose, canIssue }: { selection: { kind: 'material' | 'product'; id: string }; onClose: () => void; canIssue: boolean }) {
   const material = useQuery({ queryKey: ['lot-trace', 'material', selection.id], enabled: selection.kind === 'material',
     queryFn: () => apiFetch<MaterialTrace>(`/api/material-lots/${selection.id}/trace`) })
   const product = useQuery({ queryKey: ['lot-trace', 'product', selection.id], enabled: selection.kind === 'product',
@@ -86,6 +87,7 @@ function TraceDialog({ selection, onClose }: { selection: { kind: 'material' | '
         <ul className="text-sm">{inspection.data.inspection.defects.map(defect => <li key={defect.defectCode.id}>{defect.defectCode.code} · {defect.defectCode.name} · {defect.quantity}개</li>)}</ul>
       </> : inspection.data ? <p className="text-sm text-muted-foreground">미검사</p> : null}
     </> : null}
+    {selection.kind === 'product' ? <LotLabels lotId={selection.id} canIssue={canIssue} /> : null}
     <p className="text-xs text-muted-foreground">작업자는 본인에게 배정된 작업지시의 연결만 조회합니다.</p>
   </DialogContent></Dialog>
 }
@@ -130,6 +132,6 @@ export function LotsPage({ user }: { user: CurrentUser }) {
       : <DataTable columns={productColumns} data={products.data?.content ?? emptyProducts} emptyMessage={products.isPending ? '불러오는 중…' : '생성된 생산 LOT가 없습니다.'} />}
     {data ? <Pagination onPageChange={setPage} page={data.page} totalPages={data.totalPages} totalElements={data.totalElements} /> : null}
     {registerOpen ? <MaterialDialog onClose={() => setRegisterOpen(false)} /> : null}
-    {selection ? <TraceDialog key={`${selection.kind}-${selection.id}`} selection={selection} onClose={() => setSelection(null)} /> : null}
+    {selection ? <TraceDialog key={`${selection.kind}-${selection.id}`} selection={selection} canIssue={user.role !== 'WORKER'} onClose={() => setSelection(null)} /> : null}
   </section>
 }
