@@ -2,7 +2,7 @@
 
 가상의 부품 제조 공장을 위한 소형 MES 포트폴리오 프로젝트입니다.
 
-현재 저장소는 **Phase 0~4**, **Phase 5A(자재·생산 LOT 추적)** 및 **Phase 5B(검사·불량코드)** 를 구현했습니다. V6 적용, 실제 검사 API와 검사 목록·상세 화면을 확인했습니다. 전체 입력 폼·역할별 화면 점검은 최종 마무리 단계에 남겨둡니다. 참고 MES 소스는 포함하지 않았습니다.
+현재 **Phase 0~6**을 구현했고 **Phase 7 마무리**를 진행 중입니다. V7 적용과 검사·라벨 실제 API를 확인했습니다. 라벨 화면 및 전체 역할별 화면 재점검, GitHub CI 실행과 실제 배포는 아직 남아 있습니다. 참고 MES 소스는 포함하지 않았습니다.
 
 - [Phase 0 분석 및 설계](docs/phase-0-analysis-and-design.md)
 - [Phase 1 실행 환경](docs/phase-1-execution-environment.md)
@@ -11,13 +11,14 @@
 - [Phase 4 생산실적과 대시보드](docs/phase-4-production-results-and-dashboard.md)
 - [Phase 5A 자재 LOT와 생산 LOT 추적](docs/phase-5a-lot-tracking.md) — 실행·통합·브라우저 검증 완료
 - [Phase 5B 검사와 불량코드](docs/phase-5b-quality-inspections.md) — 자동 테스트·실제 API·목록/상세 브라우저 확인
-- [Phase 6 LOT 라벨 발행 이력](docs/phase-6-label-history.md) — 구현, 실제 V7 적용·화면 확인 대기
+- [Phase 6 LOT 라벨 발행 이력](docs/phase-6-label-history.md) — V7·실제 API 확인, 화면 점검 대기
+- [Phase 7 검증·시연·배포 점검표](docs/phase-7-release-checklist.md) — CI 구성 및 미검증 항목
 
 ## 목표 흐름
 
 생산계획 → 작업지시 → 작업 시작 → 생산실적 등록 → 작업 완료 → 대시보드 집계
 
-자재 LOT, 생산 LOT, 검사, 라벨 이력은 위 흐름을 먼저 완성한 뒤 독립된 단계로 확장합니다. 작업 완료와 검사 합격, 완제품 재고 반영은 서로 다른 사건으로 취급합니다.
+자재 LOT 투입·생산 LOT 추적·검사·라벨 이력은 독립된 후속 기능으로 연결했습니다. 작업 완료와 검사 합격, 완제품 재고 반영은 서로 다른 사건이며 재고 수불은 구현하지 않았습니다.
 
 ## 공개 원칙
 
@@ -25,7 +26,7 @@ peS는 독립적으로 설계하고 구현합니다. 업무 개념을 이해하�
 
 ## 실행
 
-필수 도구는 Docker Desktop 또는 Docker Engine과 Compose 플러그인입니다.
+필수 도구는 Docker Desktop 또는 Docker Engine과 Compose 플러그인입니다. 아래 Compose는 로컬 개발 전용이며 인터넷에 노출하지 않습니다.
 
 ```bash
 docker compose up --build
@@ -47,7 +48,7 @@ Compose에서 PostgreSQL만 실행한 뒤 백엔드와 프론트엔드를 각각
 
 ```bash
 docker compose up -d database
-./backend/gradlew -p backend bootRun
+./backend/gradlew -p backend bootRun --args='--spring.profiles.active=dev'
 npm --prefix frontend run dev
 ```
 
@@ -78,3 +79,13 @@ node scripts/verify-phase4.mjs
 ```
 
 이 검증은 가상 계획·작업지시 각 한 건과 실적 두 건을 DB에 추가하고 그대로 보존합니다. 수량 오류, 권한, 목표 초과 동시 등록, 중복 완료, 완료 후 쓰기 거부 및 집계 증가량을 검사합니다. 단독으로 실행하세요. 다른 사용자가 동시에 실적을 변경하면 전체 집계 증가량 검사가 실패할 수 있습니다. `PES_API_URL`과 `PES_DEMO_PASSWORD`로 접속 주소와 개발용 비밀번호를 지정할 수 있습니다.
+
+LOT 확장 시연은 작업지시 생성 시 LOT 추적을 활성화하고, 관리자가 가상 자재 LOT 10개를 등록한 뒤 작업자가 시작 전에 10개를 투입합니다. 위 실적 두 건으로 생산 LOT 두 건이 생성됩니다. 완료 후 관리자는 불량코드를 등록하고 6개 LOT를 합격 5/불량 1, 4개 LOT를 합격 4/불량 0으로 검사합니다. LOT 상세에서 연결과 검사 결과를 확인하고 식별 라벨 최초 발행·사유를 포함한 재출력 이력을 조회합니다. 검사·라벨 기록은 생산 집계를 변경하지 않습니다.
+
+## 핵심 DB 관계와 트랜잭션
+
+`Product 1:N ProductionPlan 1:N WorkOrder 1:N ProductionResult 1:0..1 ProductLot`이며 작업지시는 공정·작업자와 연결됩니다. `WorkOrderMaterial`로 작업지시와 자재 LOT의 다대다 투입을 표현합니다. 생산 LOT는 선택적으로 검사 한 건, 불량코드별 검사 내역 여러 건 및 라벨 이력 여러 건과 연결됩니다.
+
+계획 확정·지시 생성, 작업 시작·실적 등록·완료, 자재 투입, 검사 및 라벨 발행은 각각 서비스 트랜잭션 경계입니다. 서버 상태 검증과 행 잠금으로 누적 초과·중복 완료·동시 발행 충돌을 방어하고 DB 고유 제약·CHECK로 보완합니다. 상세 선택 이유는 Phase별 문서를 참고하세요.
+
+CI는 GitHub Actions에서 동일한 로컬 검증 진입점을 실행하도록 구성했습니다. 실제 CI 결과와 공개 배포는 아직 확인하지 않았습니다. 운영 분리·HTTPS·최초 관리자 발급·DB 백업 조건은 [배포 점검표](docs/phase-7-release-checklist.md)에 정리했습니다.
