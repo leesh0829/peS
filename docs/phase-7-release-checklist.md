@@ -1,12 +1,14 @@
 # Phase 7 — 검증·시연·배포 준비
 
-이 문서는 완료 선언이 아닌 출고 점검표다. 실제 배포, GitHub Actions 실행 및 전체 역할별 브라우저 점검은 별도 확인이 필요하다.
+이 문서는 완료 선언이 아닌 출고 점검표다. GitHub Actions 첫 실행은 성공했으며 실제 배포 및 전체 역할별 브라우저 점검은 별도 확인이 필요하다.
 
 ## CI와 로컬 진입점
 
 `.github/workflows/ci.yml`은 main push, pull request 및 수동 실행에서 Java 21/Node 24를 준비하고 lockfile 기반 npm ci 후 `bash scripts/validate.sh`를 실행한다. 백엔드 테스트·bootJar, 프론트엔드 lint·타입 검사·빌드와 사용 가능한 Linux Docker의 Compose config 검사를 포함한다. 운영 비밀값·배포 권한은 요구하지 않는다. 이 CI는 실제 PostgreSQL 통합 및 브라우저 E2E를 대체하지 않는다.
 
 기존 프로젝트 버전을 유지하며 [GitHub Gradle CI 안내](https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-gradle), [setup-node](https://github.com/actions/setup-node), [setup-java](https://github.com/actions/setup-java)를 확인했다. `.gitattributes`는 셸·Gradle wrapper·YAML·SQL·Node 검증 스크립트의 LF를 지정한다. 기존 파일 전체의 일괄 정규화는 하지 않는다.
+
+2026-10-08 커밋 `718b447`의 [Validate peS 실행](https://github.com/leesh0829/peS/actions/runs/37718947435)이 completed/success로 종료됐다. Java·Node 준비, npm ci, 테스트·패키징·린트·프론트엔드 빌드·Compose config와 whitespace 검사가 통과했다. 이 결과는 해당 커밋의 검증이며 이후 커밋은 각 실행 결과를 확인해야 한다. 같은 날 로컬 localhost:8080은 연결되지 않아 추가 브라우저 시연은 실행하지 않았다.
 
 ## 개발 환경 통합 검증
 
