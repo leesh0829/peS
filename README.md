@@ -2,7 +2,7 @@
 
 가상의 부품 제조 공장을 위한 소형 MES 포트폴리오 프로젝트입니다.
 
-현재 **Phase 0~6**을 구현했고 **Phase 7 마무리**를 진행 중입니다. V7 적용과 검사·라벨 실제 API 및 첫 GitHub CI 성공을 확인했습니다. 라벨 화면 및 전체 역할별 화면 재점검과 실제 배포는 아직 남아 있습니다. 참고 MES 소스는 포함하지 않았습니다.
+현재 **Phase 0~6**을 구현했고 **Phase 7 마무리**를 진행 중입니다. V7 적용과 검사·라벨 실제 API, 역할별 라벨 화면 및 첫 GitHub CI 성공을 확인했습니다. 전체 업무 화면 재점검과 실제 배포는 아직 남아 있습니다. 참고 MES 소스는 포함하지 않았습니다.
 
 - [Phase 0 분석 및 설계](docs/phase-0-analysis-and-design.md)
 - [Phase 1 실행 환경](docs/phase-1-execution-environment.md)
@@ -11,7 +11,7 @@
 - [Phase 4 생산실적과 대시보드](docs/phase-4-production-results-and-dashboard.md)
 - [Phase 5A 자재 LOT와 생산 LOT 추적](docs/phase-5a-lot-tracking.md) — 실행·통합·브라우저 검증 완료
 - [Phase 5B 검사와 불량코드](docs/phase-5b-quality-inspections.md) — 자동 테스트·실제 API·목록/상세 브라우저 확인
-- [Phase 6 LOT 라벨 발행 이력](docs/phase-6-label-history.md) — V7·실제 API 확인, 화면 점검 대기
+- [Phase 6 LOT 라벨 발행 이력](docs/phase-6-label-history.md) — V7·실제 API·역할별 라벨 화면 확인
 - [Phase 7 검증·시연·배포 점검표](docs/phase-7-release-checklist.md) — CI 구성 및 미검증 항목
 
 ## 목표 흐름
